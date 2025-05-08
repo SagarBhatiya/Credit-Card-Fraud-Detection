@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Credit Card Fraud Detection</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 text-gray-800 leading-relaxed">
+    <div id="authModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6 relative">
+            <button id="closeAuthModal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+            
+            <div class="flex border-b border-gray-200 mb-6">
+                <button id="loginTab" class="flex-1 py-3 font-medium text-center border-b-2 border-blue-500 text-blue-500">Log In</button>
+                <button id="signupTab" class="flex-1 py-3 font-medium text-center text-gray-500 hover:text-gray-700">Sign Up</button>
+            </div>
+            
+            <!-- Login Form -->
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label for="loginEmail" class="block mb-1 font-medium text-gray-700">Email</label>
+                    <input type="email" id="loginEmail" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your email" required>
+                </div>
+                <div>
+                    <label for="loginPassword" class="block mb-1 font-medium text-gray-700">Password</label>
+                    <input type="password" id="loginPassword" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your password" required>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="rememberMe" class="w-4 h-4 text-blue-500 border-gray-300 rounded focus:ring-blue-500">
+                        <label for="rememberMe" class="ml-2 text-sm text-gray-600">Remember me</label>
+                    </div>
+                    <a href="#" class="text-sm text-blue-500 hover:underline">Forgot password?</a>
+                </div>
+                <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition duration-300 font-medium">Log In</button>
+            </form>
+            
+            <!-- Signup Form -->
+            <form id="signupForm" class="space-y-4 hidden">
+                <div>
+                    <label for="signupName" class="block mb-1 font-medium text-gray-700">Full Name</label>
+                    <input type="text" id="signupName" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your full name" required>
+                </div>
+                <div>
+                    <label for="signupEmail" class="block mb-1 font-medium text-gray-700">Email</label>
+                    <input type="email" id="signupEmail" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your email" required>
+                </div>
+                <div>
+                    <label for="signupPassword" class="block mb-1 font-medium text-gray-700">Password</label>
+                    <input type="password" id="signupPassword" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Create a password" required>
+                </div>
+                <div>
+                    <label for="confirmPassword" class="block mb-1 font-medium text-gray-700">Confirm Password</label>
+                    <input type="password" id="confirmPassword" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Confirm your password" required>
+                </div>
+                <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition duration-300 font-medium">Create Account</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Card Modal -->
+    <div id="addCardModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6 relative">
+            <button id="closeCardModal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+            
+            <h2 class="text-xl font-semibold mb-4 text-gray-800">Add New Card</h2>
+            
+            <form id="addCardForm" class="space-y-4">
+                <div>
+                    <label for="cardName" class="block mb-1 font-medium text-gray-700">Card Nickname</label>
+                    <input type="text" id="cardName" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. Personal Visa" required>
+                </div>
+                <div>
+                    <label for="cardNumber" class="block mb-1 font-medium text-gray-700">Card Number</label>
+                    <input type="text" id="cardNumber" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="XXXX XXXX XXXX XXXX" required>
+                </div>
+                <div class="flex space-x-4">
+                    <div class="w-1/2">
+                        <label for="expiryDate" class="block mb-1 font-medium text-gray-700">Expiry Date</label>
+                        <input type="text" id="expiryDate" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="MM/YY" required>
+                    </div>
+                    <div class="w-1/2">
+                        <label for="cvv" class="block mb-1 font-medium text-gray-700">CVV</label>
+                        <input type="text" id="cvv" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="XXX" required>
+                    </div>
+                </div>
+                <div>
+                    <label for="cardholderName" class="block mb-1 font-medium text-gray-700">Cardholder Name</label>
+                    <input type="text" id="cardholderName" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Name as it appears on card" required>
+                </div>
+                <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition duration-300 font-medium">Add Card</button>
+            </form>
+        </div>
+    </div>
+
+    <header class="bg-white shadow-md py-5 mb-8">
+        <div class="container mx-auto px-5">
+            <div class="flex justify-between items-center">
+                <div class="logo text-2xl font-bold text-blue-500 flex items-center">
+                    <span class="logo-icon text-3xl mr-2">🛡️</span>
+                    FraudGuard
+                </div>
+                <div class="nav-links hidden md:flex gap-5">
+                    <a href="#home" class="font-medium px-3 py-2 rounded-md transition duration-300 ease-in-out hover:bg-blue-100 hover:text-blue-500">Home</a>
+                    <a href="#detection" class="font-medium px-3 py-2 rounded-md transition duration-300 ease-in-out hover:bg-blue-100 hover:text-blue-500">Detect Fraud</a>
+                    <a href="#about" class="font-medium px-3 py-2 rounded-md transition duration-300 ease-in-out hover:bg-blue-100 hover:text-blue-500">About</a>
+                    <a href="#contact" class="font-medium px-3 py-2 rounded-md transition duration-300 ease-in-out hover:bg-blue-100 hover:text-blue-500">Contact</a>
+                </div>
+                <div class="auth-buttons flex items-center gap-3">
+                    <button id="headerLoginBtn" class="px-4 py-2 font-medium text-blue-500 border border-blue-500 rounded-md hover:bg-blue-50 transition">Log In</button>
+                    <button id="headerSignupBtn" class="px-4 py-2 font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600 transition">Sign Up</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex container mx-auto px-5 mb-20">
+        <!-- Sidebar -->
+        <div class="sidebar w-64 bg-white rounded-md shadow-md p-4 mr-6 min-h-screen sticky top-5">
+            <div class="sidebar-header mb-6 pb-3 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800">Account Dashboard</h3>
+            </div>
+            
+            <!-- User Profile Section -->
+            <div class="user-profile mb-6 pb-3 border-b border-gray-200">
+                <div class="flex items-center mb-3">
+                    <div class="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-lg">
+                        JD
+                    </div>
+                    <div class="ml-3">
+                        <p class="font-medium text-gray-800">John Doe</p>
+                        <p class="text-sm text-gray-500">john@example.com</p>
+                    </div>
+                </div>
+                <button class="text-sm text-blue-500 hover:underline">Edit Profile</button>
+            </div>
+            
+            <!-- Cards Section -->
+            <div class="cards-section mb-6 pb-3 border-b border-gray-200">
+                <div class="flex justify-between items-center mb-3">
+                    <h4 class="font-medium text-gray-700">My Cards</h4>
+                    <button id="addCardBtn" class="text-blue-500 hover:text-blue-700">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="cards-list space-y-2">
+                    <div class="card-item p-2 bg-gray-50 rounded-md hover:bg-gray-100 transition cursor-pointer border-l-4 border-blue-500">
+                        <p class="font-medium text-gray-800">Personal Visa</p>
+                        <p class="text-sm text-gray-500">**** **** **** 4289</p>
+                    </div>
+                    <div class="card-item p-2 bg-gray-50 rounded-md hover:bg-gray-100 transition cursor-pointer border-l-4 border-green-500">
+                        <p class="font-medium text-gray-800">Work Mastercard</p>
+                        <p class="text-sm text-gray-500">**** **** **** 7651</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Transaction History -->
+            <div class="history-section mb-6">
+                <h4 class="font-medium text-gray-700 mb-3">Recent Transactions</h4>
+                
+                <div class="history-list space-y-3">
+                    <div class="history-item p-2 bg-gray-50 rounded-md hover:bg-gray-100 transition cursor-pointer">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-medium text-gray-800">Online Purchase</p>
+                                <p class="text-xs text-gray-500">May 7, 2025 • 10:23 AM</p>
+                            </div>
+                            <span class="text-sm font-medium text-gray-800">$42.99</span>
+                        </div>
+                        <div class="mt-1 flex items-center">
+                            <span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-1"></span>
+                            <span class="text-xs text-green-500">Safe</span>
+                        </div>
+                    </div>
+                    
+                    <div class="history-item p-2 bg-gray-50 rounded-md hover:bg-gray-100 transition cursor-pointer">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-medium text-gray-800">Grocery Store</p>
+                                <p class="text-xs text-gray-500">May 6, 2025 • 5:17 PM</p>
+                            </div>
+                            <span class="text-sm font-medium text-gray-800">$87.32</span>
+                        </div>
+                        <div class="mt-1 flex items-center">
+                            <span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-1"></span>
+                            <span class="text-xs text-green-500">Safe</span>
+                        </div>
+                    </div>
+                    
+                    <div class="history-item p-2 bg-gray-50 rounded-md hover:bg-gray-100 transition cursor-pointer">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-medium text-gray-800">International Payment</p>
+                                <p class="text-xs text-gray-500">May 5, 2025 • 11:45 PM</p>
+                            </div>
+                            <span class="text-sm font-medium text-gray-800">$350.00</span>
+                        </div>
+                        <div class="mt-1 flex items-center">
+                            <span class="inline-block w-2 h-2 rounded-full bg-yellow-500 mr-1"></span>
+                            <span class="text-xs text-yellow-500">Flagged</span>
+                        </div>
+                    </div>
+                    
+                    <div class="history-item p-2 bg-gray-50 rounded-md hover:bg-gray-100 transition cursor-pointer">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-medium text-gray-800">Restaurant</p>
+                                <p class="text-xs text-gray-500">May 4, 2025 • 8:23 PM</p>
+                            </div>
+                            <span class="text-sm font-medium text-gray-800">$53.75</span>
+                        </div>
+                        <div class="mt-1 flex items-center">
+                            <span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-1"></span>
+                            <span class="text-xs text-green-500">Safe</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="w-full mt-3 text-center text-blue-500 hover:underline text-sm">View All Transactions</button>
+            </div>
+            
+            <div class="sidebar-footer">
+                <button class="w-full bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300 transition duration-300 font-medium flex items-center justify-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                    </svg>
+                    Logout
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content flex-1">
+            <section id="home" class="hero mb-10">
+                <div class="bg-white rounded-md shadow-md p-8">
+                    <div class="hero-content">
+                        <h1 class="text-4xl mb-5 text-gray-800 font-semibold">Protect Against <span class="text-blue-500">Credit Card Fraud</span> with AI</h1>
+                        <p class="mb-5 text-lg text-gray-600">Our advanced machine learning system helps you detect potentially fraudulent credit card transactions with high accuracy. Stay protected from financial fraud with our intelligent detection system.</p>
+                        <a href="#detection" class="inline-block bg-blue-500 text-white px-6 py-3 rounded-md font-semibold transition duration-300 ease-in-out hover:bg-blue-700 border-none cursor-pointer text-lg">Check Transaction</a>
+                        <a href="#about" class="inline-block bg-transparent border-2 border-blue-500 text-blue-500 ml-2 px-6 py-3 rounded-md font-semibold transition duration-300 ease-in-out hover:bg-blue-100">Learn More</a>
+                    </div>
+                </div>
+            </section>
+
+            <section id="detection" class="mb-10">
+                <div class="bg-white rounded-md shadow-md p-8">
+                    <div class="card-header mb-5 pb-3 border-b border-gray-200">
+                        <h2 class="text-xl text-gray-800 font-semibold mb-2">Fraud Detection System</h2>
+                        <p class="text-gray-600">Enter transaction details below to check if it might be fraudulent</p>
+                    </div>
+                    <form id="fraudForm">
+                        <div class="input-group flex flex-col md:flex-row gap-5 mb-5">
+                            <div class="form-group flex-1">
+                                <label for="amount" class="block mb-2 font-medium text-gray-700">Transaction Amount ($)</label>
+                                <input type="number" id="amount" name="amount" placeholder="100.00" required class="w-full px-4 py-3 border border-gray-300 rounded-md text-lg transition duration-300 ease-in-out focus:outline-none focus:border-blue-500 focus:shadow-outline-blue">
+                            </div>
+                            <div class="form-group flex-1">
+                                <label for="location" class="block mb-2 font-medium text-gray-700">Transaction Location</label>
+                                <select id="location" name="location" required class="w-full px-4 py-3 border border-gray-300 rounded-md text-lg transition duration-300 ease-in-out focus:outline-none focus:border-blue-500 focus:shadow-outline-blue">
+                                    <option value="">Select location</option>
+                                    <option value="domestic">Domestic</option>
+                                    <option value="international">International</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="input-group flex flex-col md:flex-row gap-5 mb-5">
+                            <div class="form-group flex-1">
+                                <label for="time" class="block mb-2 font-medium text-gray-700">Time of Day</label>
+                                <select id="time" name="time" required class="w-full px-4 py-3 border border-gray-300 rounded-md text-lg transition duration-300 ease-in-out focus:outline-none focus:border-blue-500 focus:shadow-outline-blue">
+                                    <option value="">Select time</option>
+                                    <option value="morning">Morning (6AM-12PM)</option>
+                                    <option value="afternoon">Afternoon (12PM-6PM)</option>
+                                    <option value="evening">Evening (6PM-12AM)</option>
+                                    <option value="night">Night (12AM-6AM)</option>
+                                </select>
+                            </div>
+                            <div class="form-group flex-1">
+                                <label for="category" class="block mb-2 font-medium text-gray-700">Purchase Category</label>
+                                <select id="category" name="category" required class="w-full px-4 py-3 border border-gray-300 rounded-md text-lg transition duration-300 ease-in-out focus:outline-none focus:border-blue-500 focus:shadow-outline-blue">
+                                    <option value="">Select category</option>
+                                    <option value="grocery">Grocery</option>
+                                    <option value="retail">Retail</option>
+                                    <option value="restaurant">Restaurant</option>
+                                    <option value="travel">Travel</option>
+                                    <option value="entertainment">Entertainment</option>
+                                    <option value="online">Online Services</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-5">
+                            <label for="history" class="block mb-2 font-medium text-gray-700">Is this unusual for your spending pattern?</label>
+                            <select id="history" name="history" required class="w-full px-4 py-3 border border-gray-300 rounded-md text-lg transition duration-300 ease-in-out focus:outline-none focus:border-blue-500 focus:shadow-outline-blue">
+                                <option value="">Select option</option>
+                                <option value="normal">Normal purchase for me</option>
+                                <option value="unusual">Unusual purchase</option>
+                                <option value="rare">Very unusual/first time</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="inline-block bg-blue-500 text-white px-6 py-3 rounded-md font-semibold transition duration-300 ease-in-out hover:bg-blue-700 border-none cursor-pointer text-lg">Analyze Transaction</button>
+                    </form>
+<script src="script.js"></script>
+                   
+</body>
+</html>
