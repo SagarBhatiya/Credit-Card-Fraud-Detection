@@ -12,9 +12,26 @@ const closeAuthModal = document.getElementById('closeAuthModal');
 const addCardModal = document.getElementById('addCardModal');
 const addCardBtn = document.getElementById('addCardBtn');
 const closeCardModal = document.getElementById('closeCardModal');
+const addCardForm = document.getElementById('addCardForm');
+
+// Dashboard Elements
+const sidebarUsername = document.getElementById('sidebarUsername');
+const sidebarUsernameInitials = document.getElementById('sidebarUsernameInitials');
+const sidebarUserEmail = document.getElementById('sidebarUserEmail');
+const cardsList = document.querySelector('.cards-list');
+const historyList = document.querySelector('.history-list');
 
 // API URL - Change this to your backend URL
 const API_URL = 'http://localhost:5000/api/auth';
+
+// Sample Indian user data
+const INDIAN_NAMES = ['Aarav Sharma', 'Priya Patel', 'Rahul Singh', 'Ananya Gupta', 'Vikram Joshi'];
+const INDIAN_CITIES = ['Mumbai', 'Delhi', 'Bangalore', 'Hyderabad', 'Chennai', 'Kolkata', 'Pune'];
+const INDIAN_BANKS = ['SBI', 'HDFC', 'ICICI', 'Axis', 'Kotak', 'PNB'];
+
+// Store user cards and transactions
+let userCards = [];
+let userTransactions = [];
 
 // Auth Modal Functions
 function showAuthModal() {
@@ -92,29 +109,23 @@ if (closeCardModal) closeCardModal.addEventListener('click', hideCardModal);
 // Auth Functions
 async function loginUser(email, password) {
     try {
-        const response = await fetch(`${API_URL}/login`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ email, password }),
-            credentials: 'include' // Include cookies if your server uses them
-        });
-
-        const data = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(data.message || 'Login failed');
-        }
+        // In a real app, you would make an API call here
+        // For demo purposes, we'll simulate a successful login
+        const user = {
+            id: 'user123',
+            username: INDIAN_NAMES[Math.floor(Math.random() * INDIAN_NAMES.length)],
+            email: email,
+            token: 'demo-token-123'
+        };
         
         // Store the token in localStorage
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('token', user.token);
+        localStorage.setItem('user', JSON.stringify(user));
         
         // Dispatch an event to notify other components
         window.dispatchEvent(new CustomEvent('user-authenticated'));
         
-        return data;
+        return user;
     } catch (error) {
         console.error('Login error:', error);
         throw error;
@@ -123,29 +134,23 @@ async function loginUser(email, password) {
 
 async function signupUser(username, email, password) {
     try {
-        const response = await fetch(`${API_URL}/signup`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ username, email, password }),
-            credentials: 'include' // Include cookies if your server uses them
-        });
-
-        const data = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(data.message || 'Signup failed');
-        }
+        // In a real app, you would make an API call here
+        // For demo purposes, we'll simulate a successful signup
+        const user = {
+            id: 'user' + Math.floor(Math.random() * 1000),
+            username: username,
+            email: email,
+            token: 'demo-token-' + Math.floor(Math.random() * 1000)
+        };
         
         // Store the token in localStorage
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('token', user.token);
+        localStorage.setItem('user', JSON.stringify(user));
         
         // Dispatch an event to notify other components
         window.dispatchEvent(new CustomEvent('user-authenticated'));
         
-        return data;
+        return user;
     } catch (error) {
         console.error('Signup error:', error);
         throw error;
@@ -160,33 +165,12 @@ async function getCurrentUser() {
     }
     
     try {
-        const response = await fetch(`${API_URL}/user`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include' // Include cookies if your server uses them
-        });
-
-        if (response.status === 401) {
-            // Token is invalid or expired
-            logout();
-            return null;
-        }
-
-        if (!response.ok) {
-            throw new Error('Failed to get user data');
-        }
-
-        const userData = await response.json();
-        return userData;
+        // In a real app, you would verify the token with your backend
+        const user = JSON.parse(localStorage.getItem('user'));
+        return user;
     } catch (error) {
         console.error('Get user error:', error);
-        // Only clear local storage if it's an auth error
-        if (error.message.includes('auth') || error.message.includes('token')) {
-            logout();
-        }
+        logout();
         return null;
     }
 }
@@ -194,9 +178,12 @@ async function getCurrentUser() {
 function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    // Clear cards and transactions
+    userCards = [];
+    userTransactions = [];
     // Dispatch an event to notify other components
     window.dispatchEvent(new CustomEvent('user-logged-out'));
-    // Update UI as needed
+    // Update UI
     updateAuthUI();
 }
 
@@ -218,7 +205,17 @@ function updateAuthUI() {
                 // Update user info display
                 const usernameDisplay = document.getElementById('usernameDisplay');
                 if (usernameDisplay && user) {
-                    usernameDisplay.textContent = user.username;
+                    usernameDisplay.textContent = user.username.split(' ')[0]; // Show first name only
+                }
+                
+                // Update sidebar user info
+                if (sidebarUsername && sidebarUserEmail && sidebarUsernameInitials) {
+                    sidebarUsername.textContent = user.username;
+                    sidebarUserEmail.textContent = user.email;
+                    // Get initials
+                    const names = user.username.split(' ');
+                    const initials = names[0].charAt(0) + (names[1] ? names[1].charAt(0) : '');
+                    sidebarUsernameInitials.textContent = initials;
                 }
                 
                 // Show protected content
@@ -226,13 +223,16 @@ function updateAuthUI() {
                     element.classList.remove('hidden');
                 });
                 
-                // If you have an add card button (for logged in users only)
+                // Show add card button
                 if (addCardBtn) {
                     addCardBtn.classList.remove('hidden');
                 }
+                
+                // Load user data
+                loadUserData();
             } catch (error) {
                 console.error('Error parsing user data', error);
-                logout(); // Handle corrupt data by logging out
+                logout();
             }
         }
     } else {
@@ -246,12 +246,141 @@ function updateAuthUI() {
                 element.classList.add('hidden');
             });
             
-            // If you have an add card button (for logged in users only)
+            // Hide add card button
             if (addCardBtn) {
                 addCardBtn.classList.add('hidden');
             }
         }
     }
+}
+
+// Load user cards and transactions
+function loadUserData() {
+    // Start with empty arrays
+    userCards = [];
+    userTransactions = [];
+    
+    updateCardsList();
+    updateTransactionsList();
+}
+
+// Update cards list in UI with remove option
+function updateCardsList() {
+    if (!cardsList) return;
+    
+    cardsList.innerHTML = '';
+    
+    if (userCards.length === 0) {
+        cardsList.innerHTML = `
+            <div class="text-center py-4 text-gray-400">
+                No cards added yet. Click "+ Add Card" to add one.
+            </div>
+        `;
+        return;
+    }
+    
+    userCards.forEach((card, index) => {
+        const cardElement = document.createElement('div');
+        cardElement.className = `card-item relative p-2 card-gradient rounded-md hover:bg-gray-800 transition cursor-pointer border-l-4 border-${card.color}-400 mb-2`;
+        cardElement.innerHTML = `
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="font-medium text-gray-200">${card.nickname}</p>
+                    <p class="text-sm text-gray-400">**** **** **** ${card.last4}</p>
+                </div>
+                <button class="remove-card-btn text-red-400 hover:text-red-300 text-sm" data-index="${index}">
+                    Remove
+                </button>
+            </div>
+        `;
+        cardsList.appendChild(cardElement);
+    });
+
+    // Add event listeners to remove buttons
+    document.querySelectorAll('.remove-card-btn').forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const index = parseInt(button.dataset.index);
+            removeCard(index);
+        });
+    });
+}
+
+// Function to remove a card
+function removeCard(index) {
+    if (index >= 0 && index < userCards.length) {
+        userCards.splice(index, 1);
+        updateCardsList();
+        showNotification('Card removed successfully', 'success');
+    }
+}
+
+// Update transactions list in UI
+function updateTransactionsList() {
+    if (!historyList) return;
+    
+    historyList.innerHTML = '';
+    
+    if (userTransactions.length === 0) {
+        historyList.innerHTML = `
+            <div class="text-center py-4 text-gray-400">
+                No transactions yet. Submit a transaction to see history.
+            </div>
+        `;
+        return;
+    }
+    
+    userTransactions.forEach(trans => {
+        const dateStr = trans.date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+        const timeStr = trans.date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+        
+        const transElement = document.createElement('div');
+        transElement.className = 'history-item p-2 card-gradient rounded-md hover:bg-gray-800 transition cursor-pointer';
+        transElement.innerHTML = `
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="font-medium text-gray-200">${trans.merchant}</p>
+                    <p class="text-xs text-gray-400">${dateStr} • ${timeStr}</p>
+                </div>
+                <span class="text-sm font-medium text-gray-200">₹${trans.amount.toLocaleString('en-IN')}</span>
+            </div>
+            <div class="mt-1 flex items-center">
+                <span class="inline-block w-2 h-2 rounded-full ${trans.isFlagged ? 'bg-yellow-400' : 'bg-green-400'} mr-1"></span>
+                <span class="text-xs ${trans.isFlagged ? 'text-yellow-400' : 'text-green-400'}">${trans.isFlagged ? 'Flagged' : 'Safe'}</span>
+            </div>
+        `;
+        historyList.appendChild(transElement);
+    });
+}
+
+// Add new card
+function addCard(cardData) {
+    const newCard = {
+        id: 'card' + (userCards.length + 1),
+        nickname: cardData.nickname,
+        last4: cardData.number.slice(-4),
+        type: detectCardType(cardData.number),
+        color: getRandomColor()
+    };
+    
+    userCards.push(newCard);
+    updateCardsList();
+    showNotification('Card added successfully!', 'success');
+}
+
+// Detect card type based on number
+function detectCardType(number) {
+    // Very basic detection for demo
+    if (/^4/.test(number)) return 'Visa';
+    if (/^5[1-5]/.test(number)) return 'Mastercard';
+    if (/^3[47]/.test(number)) return 'Amex';
+    return 'Card';
+}
+
+// Get random color for card border
+function getRandomColor() {
+    const colors = ['cyan', 'green', 'blue', 'purple', 'pink'];
+    return colors[Math.floor(Math.random() * colors.length)];
 }
 
 // Form Validations
@@ -301,11 +430,11 @@ if (loginForm) {
             // Close modal after successful login
             hideAuthModal();
             updateAuthUI();
-            // Show success notification if you have one
+            // Show success notification
             showNotification('Login successful!', 'success');
         } catch (error) {
             if (errorMsg) {
-                errorMsg.textContent = error.message || 'Login failed';
+                errorMsg.textContent = error.message || 'Login failed. Please try again.';
                 errorMsg.classList.remove('hidden');
             }
         } finally {
@@ -323,10 +452,11 @@ if (signupForm) {
         const username = document.getElementById('signupUsername').value.trim();
         const email = document.getElementById('signupEmail').value.trim();
         const password = document.getElementById('signupPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
         const errorMsg = document.getElementById('signupError');
         
         // Basic form validation
-        if (!username || !email || !password) {
+        if (!username || !email || !password || !confirmPassword) {
             if (errorMsg) {
                 errorMsg.textContent = 'Please fill in all fields';
                 errorMsg.classList.remove('hidden');
@@ -350,6 +480,14 @@ if (signupForm) {
             return;
         }
         
+        if (password !== confirmPassword) {
+            if (errorMsg) {
+                errorMsg.textContent = 'Passwords do not match';
+                errorMsg.classList.remove('hidden');
+            }
+            return;
+        }
+        
         // Show loading state
         const submitBtn = signupForm.querySelector('button[type="submit"]');
         const originalBtnText = submitBtn.textContent;
@@ -361,11 +499,11 @@ if (signupForm) {
             // Close modal after successful signup
             hideAuthModal();
             updateAuthUI();
-            // Show success notification if you have one
+            // Show success notification
             showNotification('Account created successfully!', 'success');
         } catch (error) {
             if (errorMsg) {
-                errorMsg.textContent = error.message || 'Signup failed';
+                errorMsg.textContent = error.message || 'Signup failed. Please try again.';
                 errorMsg.classList.remove('hidden');
             }
         } finally {
@@ -376,8 +514,40 @@ if (signupForm) {
     });
 }
 
+// Add Card Form Submission
+if (addCardForm) {
+    addCardForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const cardData = {
+            nickname: document.getElementById('cardName').value.trim(),
+            number: document.getElementById('cardNumber').value.replace(/\s/g, ''),
+            expiry: document.getElementById('expiryDate').value.trim(),
+            cvv: document.getElementById('cvv').value.trim(),
+            name: document.getElementById('cardholderName').value.trim()
+        };
+        
+        // Basic validation
+        if (!cardData.nickname || !cardData.number || !cardData.expiry || !cardData.cvv || !cardData.name) {
+            showNotification('Please fill in all card details', 'error');
+            return;
+        }
+        
+        if (cardData.number.length < 16) {
+            showNotification('Please enter a valid card number', 'error');
+            return;
+        }
+        
+        // Add the card
+        addCard(cardData);
+        hideCardModal();
+        addCardForm.reset();
+    });
+}
+
 // Add logout functionality
 const logoutBtn = document.getElementById('logoutBtn');
+const sidebarLogoutBtn = document.getElementById('sidebarLogoutBtn');
 if (logoutBtn) {
     logoutBtn.addEventListener('click', (e) => {
         e.preventDefault();
@@ -385,72 +555,13 @@ if (logoutBtn) {
         showNotification('You have been logged out', 'info');
     });
 }
-
-// Simple notification function - add this to your HTML or create dynamically
-function showNotification(message, type = 'info') {
-    // Check if notification container exists, if not create it
-    let notificationContainer = document.getElementById('notificationContainer');
-    if (!notificationContainer) {
-        notificationContainer = document.createElement('div');
-        notificationContainer.id = 'notificationContainer';
-        notificationContainer.className = 'fixed top-4 right-4 z-50';
-        document.body.appendChild(notificationContainer);
-    }
-    
-    // Create notification element
-    const notification = document.createElement('div');
-    notification.className = `notification mb-2 p-3 rounded shadow-lg ${type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500'} text-white`;
-    notification.textContent = message;
-    
-    // Add to container
-    notificationContainer.appendChild(notification);
-    
-    // Auto-remove after 3 seconds
-    setTimeout(() => {
-        notification.classList.add('opacity-0', 'transition-opacity');
-        setTimeout(() => {
-            notification.remove();
-        }, 300);
-    }, 3000);
+if (sidebarLogoutBtn) {
+    sidebarLogoutBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        logout();
+        showNotification('You have been logged out', 'info');
+    });
 }
-
-// Initialize UI on page load
-document.addEventListener('DOMContentLoaded', function() {
-    updateAuthUI();
-    
-    // Check if user is logged in
-    getCurrentUser().then(user => {
-        if (user) {
-            console.log('User is authenticated:', user);
-            // Update user data in local storage in case anything changed server-side
-            localStorage.setItem('user', JSON.stringify(user));
-            updateAuthUI();
-        }
-    }).catch(error => {
-        console.error('Error checking authentication status:', error);
-    });
-    
-    // Handle outside clicks to close modal
-    window.addEventListener('click', function(event) {
-        if (event.target === authModal) {
-            hideAuthModal();
-        }
-        if (event.target === addCardModal) {
-            hideCardModal();
-        }
-    });
-    
-    // Test server connection
-    fetch(`${API_URL.replace('/auth', '')}/health`)
-        .then(response => response.json())
-        .then(data => {
-            console.log('Server status:', data.status);
-        })
-        .catch(error => {
-            console.error('Server connection error:', error);
-            showNotification('Cannot connect to server. Please check your backend is running.', 'error');
-        });
-});
 
 // Fraud Detection Form
 const fraudForm = document.getElementById('fraudForm');
@@ -480,9 +591,9 @@ if (fraudForm) {
         let riskScore = 0;
         
         // High amount increases risk
-        if (amount > 1000) riskScore += 30;
-        else if (amount > 500) riskScore += 15;
-        else if (amount > 200) riskScore += 5;
+        if (amount > 10000) riskScore += 30; // ₹10,000+
+        else if (amount > 5000) riskScore += 15; // ₹5,000-₹10,000
+        else if (amount > 2000) riskScore += 5; // ₹2,000-₹5,000
         
         // International transactions are riskier
         if (location === 'international') riskScore += 20;
@@ -529,7 +640,7 @@ if (fraudForm) {
         `;
         
         // Add specific risk factors
-        if (amount > 500) resultHTML += `<li>• High transaction amount ($${amount.toFixed(2)})</li>`;
+        if (amount > 5000) resultHTML += `<li>• High transaction amount (₹${amount.toLocaleString('en-IN')})</li>`;
         if (location === 'international') resultHTML += '<li>• International transaction location</li>';
         if (time === 'night') resultHTML += '<li>• Unusual transaction time</li>';
         if (history === 'rare' || history === 'unusual') resultHTML += '<li>• Unusual for your spending pattern</li>';
@@ -553,8 +664,123 @@ if (fraudForm) {
             // Scroll to results
             results.scrollIntoView({ behavior: 'smooth' });
         }
+        
+        // Add this transaction to history
+        const now = new Date();
+        userTransactions.unshift({
+            id: 'trans' + (userTransactions.length + 1),
+            date: now,
+            amount: amount,
+            category: category.charAt(0).toUpperCase() + category.slice(1),
+            merchant: getMerchantForCategory(category),
+            location: location === 'international' ? 'International' : INDIAN_CITIES[Math.floor(Math.random() * INDIAN_CITIES.length)],
+            isFlagged: riskScore >= 25
+        });
+        
+        updateTransactionsList();
     });
 }
+
+// Helper function to get merchant for category
+function getMerchantForCategory(category) {
+    const merchants = {
+        grocery: ['Big Bazaar', 'D-Mart', 'Reliance Fresh', 'More', 'Nature\'s Basket'],
+        retail: ['Amazon India', 'Flipkart', 'Myntra', 'Ajio', 'Tata Cliq'],
+        restaurant: ['Swiggy', 'Zomato', 'Domino\'s', 'McDonald\'s', 'KFC'],
+        travel: ['IRCTC', 'MakeMyTrip', 'Goibibo', 'Yatra', 'Cleartrip'],
+        entertainment: ['BookMyShow', 'PVR Cinemas', 'INOX', 'Netflix', 'Amazon Prime'],
+        online: ['Google Play', 'Apple App Store', 'Paytm', 'PhonePe', 'Spotify'],
+        other: ['General Store', 'Local Vendor', 'Kirana Shop', 'Street Vendor']
+    };
+    
+    const categoryMerchants = merchants[category] || merchants.other;
+    return categoryMerchants[Math.floor(Math.random() * categoryMerchants.length)];
+}
+
+// Simple notification function
+function showNotification(message, type = 'info') {
+    // Check if notification container exists, if not create it
+    let notificationContainer = document.getElementById('notificationContainer');
+    if (!notificationContainer) {
+        notificationContainer = document.createElement('div');
+        notificationContainer.id = 'notificationContainer';
+        notificationContainer.className = 'fixed top-4 right-4 z-50';
+        document.body.appendChild(notificationContainer);
+    }
+    
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification mb-2 p-3 rounded shadow-lg ${type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500'} text-white`;
+    notification.textContent = message;
+    
+    // Add to container
+    notificationContainer.appendChild(notification);
+    
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+        notification.classList.add('opacity-0', 'transition-opacity');
+        setTimeout(() => {
+            notification.remove();
+        }, 300);
+    }, 3000);
+}
+
+// Initialize UI on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateAuthUI();
+    
+    // Check if user is logged in
+    getCurrentUser().then(user => {
+        if (user) {
+            console.log('User is authenticated:', user);
+            updateAuthUI();
+        }
+    }).catch(error => {
+        console.error('Error checking authentication status:', error);
+    });
+    
+    // Handle outside clicks to close modal
+    window.addEventListener('click', function(event) {
+        if (event.target === authModal) {
+            hideAuthModal();
+        }
+        if (event.target === addCardModal) {
+            hideCardModal();
+        }
+    });
+    
+    // Format card number input
+    const cardNumberInput = document.getElementById('cardNumber');
+    if (cardNumberInput) {
+        cardNumberInput.addEventListener('input', function(e) {
+            // Remove all non-digit characters
+            let value = this.value.replace(/\D/g, '');
+            
+            // Add space after every 4 digits
+            value = value.replace(/(\d{4})(?=\d)/g, '$1 ');
+            
+            // Update the input value
+            this.value = value;
+        });
+    }
+    
+    // Format expiry date input
+    const expiryDateInput = document.getElementById('expiryDate');
+    if (expiryDateInput) {
+        expiryDateInput.addEventListener('input', function(e) {
+            // Remove all non-digit characters
+            let value = this.value.replace(/\D/g, '');
+            
+            // Add slash after 2 digits (MM/YY)
+            if (value.length > 2) {
+                value = value.substring(0, 2) + '/' + value.substring(2, 4);
+            }
+            
+            // Update the input value
+            this.value = value;
+        });
+    }
+});
 
 // Export functions for use in other scripts
 window.authFunctions = {

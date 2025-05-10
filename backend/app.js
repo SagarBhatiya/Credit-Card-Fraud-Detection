@@ -13,12 +13,10 @@ app.use(express.static(path.join(__dirname, "backend")));
 
 // Middleware
 app.use(express.json());
-app.use(
-  cors({
-    origin: process.env.CLIENT_URL || "*", // Allow specific origin or all in development
-    credentials: true,
-  })
-);
+app.use(cors({
+  origin: "http://127.0.0.1:5501", // 👈 match your frontend
+  credentials: true               // 👈 allow cookies/headers
+}));
 
 // MongoDB Connection with better error handling
 mongoose
