@@ -1,4 +1,4 @@
-// DOM Elements
+
 const authModal = document.getElementById('authModal');
 const loginTab = document.getElementById('loginTab');
 const signupTab = document.getElementById('signupTab');
@@ -8,28 +8,28 @@ const headerLoginBtn = document.getElementById('headerLoginBtn');
 const headerSignupBtn = document.getElementById('headerSignupBtn');
 const closeAuthModal = document.getElementById('closeAuthModal');
 
-// Show/Hide Card Modal
+
 const addCardModal = document.getElementById('addCardModal');
 const addCardBtn = document.getElementById('addCardBtn');
 const closeCardModal = document.getElementById('closeCardModal');
 const addCardForm = document.getElementById('addCardForm');
 
-// Dashboard Elements
+
 const sidebarUsername = document.getElementById('sidebarUsername');
 const sidebarUsernameInitials = document.getElementById('sidebarUsernameInitials');
 const sidebarUserEmail = document.getElementById('sidebarUserEmail');
 const cardsList = document.querySelector('.cards-list');
 const historyList = document.querySelector('.history-list');
 
-// API URL - Change this to your backend URL
+
 const API_URL = 'http://localhost:5000/api/auth';
 
-// Sample Indian user data
+
 const INDIAN_NAMES = ['Aarav Sharma', 'Priya Patel', 'Rahul Singh', 'Ananya Gupta', 'Vikram Joshi'];
 const INDIAN_CITIES = ['Mumbai', 'Delhi', 'Bangalore', 'Hyderabad', 'Chennai', 'Kolkata', 'Pune'];
 const INDIAN_BANKS = ['SBI', 'HDFC', 'ICICI', 'Axis', 'Kotak', 'PNB'];
 
-// Store user cards and transactions
+
 let userCards = [];
 let userTransactions = [];
 
@@ -42,7 +42,7 @@ function showAuthModal() {
         element.textContent = '';
         element.classList.add('hidden');
     });
-    // Clear form fields
+   
     if (loginForm) loginForm.reset();
     if (signupForm) signupForm.reset();
 }
@@ -51,7 +51,7 @@ function hideAuthModal() {
     authModal.classList.add('hidden');
 }
 
-// Event listeners for showing/hiding auth modal
+
 if (headerLoginBtn) {
     headerLoginBtn.addEventListener('click', () => {
         showLoginTab();
@@ -76,7 +76,7 @@ function showLoginTab() {
     signupTab.classList.remove('border-cyan', 'text-cyan');
     loginForm.classList.remove('hidden');
     signupForm.classList.add('hidden');
-    // Clear any previous error messages
+    
     document.getElementById('loginError')?.classList.add('hidden');
     document.getElementById('signupError')?.classList.add('hidden');
 }
@@ -86,7 +86,7 @@ function showSignupTab() {
     loginTab.classList.remove('border-cyan', 'text-cyan');
     signupForm.classList.remove('hidden');
     loginForm.classList.add('hidden');
-    // Clear any previous error messages
+    
     document.getElementById('loginError')?.classList.add('hidden');
     document.getElementById('signupError')?.classList.add('hidden');
 }
@@ -109,8 +109,7 @@ if (closeCardModal) closeCardModal.addEventListener('click', hideCardModal);
 // Auth Functions
 async function loginUser(email, password) {
     try {
-        // In a real app, you would make an API call here
-        // For demo purposes, we'll simulate a successful login
+        // not real only simulation
         const user = {
             id: 'user123',
             username: INDIAN_NAMES[Math.floor(Math.random() * INDIAN_NAMES.length)],
@@ -122,7 +121,7 @@ async function loginUser(email, password) {
         localStorage.setItem('token', user.token);
         localStorage.setItem('user', JSON.stringify(user));
         
-        // Dispatch an event to notify other components
+        
         window.dispatchEvent(new CustomEvent('user-authenticated'));
         
         return user;
@@ -134,8 +133,7 @@ async function loginUser(email, password) {
 
 async function signupUser(username, email, password) {
     try {
-        // In a real app, you would make an API call here
-        // For demo purposes, we'll simulate a successful signup
+        // not real only simulation
         const user = {
             id: 'user' + Math.floor(Math.random() * 1000),
             username: username,
@@ -147,7 +145,7 @@ async function signupUser(username, email, password) {
         localStorage.setItem('token', user.token);
         localStorage.setItem('user', JSON.stringify(user));
         
-        // Dispatch an event to notify other components
+       
         window.dispatchEvent(new CustomEvent('user-authenticated'));
         
         return user;
@@ -165,7 +163,7 @@ async function getCurrentUser() {
     }
     
     try {
-        // In a real app, you would verify the token with your backend
+        
         const user = JSON.parse(localStorage.getItem('user'));
         return user;
     } catch (error) {
@@ -181,7 +179,7 @@ function logout() {
     // Clear cards and transactions
     userCards = [];
     userTransactions = [];
-    // Dispatch an event to notify other components
+   
     window.dispatchEvent(new CustomEvent('user-logged-out'));
     // Update UI
     updateAuthUI();
@@ -228,7 +226,7 @@ function updateAuthUI() {
                     addCardBtn.classList.remove('hidden');
                 }
                 
-                // Load user data
+             
                 loadUserData();
             } catch (error) {
                 console.error('Error parsing user data', error);
@@ -256,7 +254,7 @@ function updateAuthUI() {
 
 // Load user cards and transactions
 function loadUserData() {
-    // Start with empty arrays
+    
     userCards = [];
     userTransactions = [];
     
@@ -264,7 +262,7 @@ function loadUserData() {
     updateTransactionsList();
 }
 
-// Update cards list in UI with remove option
+
 function updateCardsList() {
     if (!cardsList) return;
     
@@ -306,7 +304,7 @@ function updateCardsList() {
     });
 }
 
-// Function to remove a card
+
 function removeCard(index) {
     if (index >= 0 && index < userCards.length) {
         userCards.splice(index, 1);
@@ -315,7 +313,7 @@ function removeCard(index) {
     }
 }
 
-// Update transactions list in UI
+
 function updateTransactionsList() {
     if (!historyList) return;
     
@@ -353,7 +351,7 @@ function updateTransactionsList() {
     });
 }
 
-// Add new card
+
 function addCard(cardData) {
     const newCard = {
         id: 'card' + (userCards.length + 1),
@@ -368,7 +366,6 @@ function addCard(cardData) {
     showNotification('Card added successfully!', 'success');
 }
 
-// Detect card type based on number
 function detectCardType(number) {
     // Very basic detection for demo
     if (/^4/.test(number)) return 'Visa';
@@ -377,7 +374,7 @@ function detectCardType(number) {
     return 'Card';
 }
 
-// Get random color for card border
+
 function getRandomColor() {
     const colors = ['cyan', 'green', 'blue', 'purple', 'pink'];
     return colors[Math.floor(Math.random() * colors.length)];
@@ -681,7 +678,7 @@ if (fraudForm) {
     });
 }
 
-// Helper function to get merchant for category
+
 function getMerchantForCategory(category) {
     const merchants = {
         grocery: ['Big Bazaar', 'D-Mart', 'Reliance Fresh', 'More', 'Nature\'s Basket'],
@@ -725,7 +722,7 @@ function showNotification(message, type = 'info') {
     }, 3000);
 }
 
-// Initialize UI on page load
+
 document.addEventListener('DOMContentLoaded', function() {
     updateAuthUI();
     
